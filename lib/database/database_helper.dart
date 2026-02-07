@@ -1,9 +1,5 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import '../models/transaction.dart';
-import '../models/category.dart';
-import '../models/budget.dart';
-import '../models/savings_goal.dart';
 import 'db_constants.dart';
 
 /// Classe singleton pour gérer la base de données SQLite
@@ -89,12 +85,12 @@ class DatabaseHelper {
       CREATE INDEX idx_transactions_date 
       ON ${DbConstants.tableTransactions}(${DbConstants.columnDate} DESC)
     ''');
-    
+
     await db.execute('''
       CREATE INDEX idx_transactions_category 
       ON ${DbConstants.tableTransactions}(${DbConstants.columnCategoryId})
     ''');
-    
+
     await db.execute('''
       CREATE INDEX idx_transactions_type 
       ON ${DbConstants.tableTransactions}(${DbConstants.columnTransactionType})

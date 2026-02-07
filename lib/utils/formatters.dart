@@ -9,11 +9,12 @@ class Formatters {
     decimalDigits: 2,
   );
 
-  static final NumberFormat compactCurrencyFormatter = NumberFormat.compactCurrency(
-    locale: 'fr_FR',
-    symbol: '€',
-    decimalDigits: 1,
-  );
+  static final NumberFormat compactCurrencyFormatter =
+      NumberFormat.compactCurrency(
+        locale: 'fr_FR',
+        symbol: '€',
+        decimalDigits: 1,
+      );
 
   // Formatters de dates
   static final DateFormat dateFormatter = DateFormat('dd/MM/yyyy');
@@ -24,8 +25,12 @@ class Formatters {
   static final DateFormat dateTimeFormatter = DateFormat('dd/MM/yyyy HH:mm');
 
   // Formatter de nombres
-  static final NumberFormat numberFormatter = NumberFormat.decimalPattern('fr_FR');
-  static final NumberFormat percentFormatter = NumberFormat.percentPattern('fr_FR');
+  static final NumberFormat numberFormatter = NumberFormat.decimalPattern(
+    'fr_FR',
+  );
+  static final NumberFormat percentFormatter = NumberFormat.percentPattern(
+    'fr_FR',
+  );
 
   /// Formater un montant en euros
   static String formatCurrency(double amount) {
@@ -102,18 +107,18 @@ class Formatters {
         return 'Il y a ${difference.inDays} jours';
       } else if (difference.inDays < 30) {
         final weeks = (difference.inDays / 7).floor();
-        return 'Il y a ${weeks} semaine${weeks > 1 ? 's' : ''}';
+        return 'Il y a $weeks semaine${weeks > 1 ? 's' : ''}';
       } else if (difference.inDays < 365) {
         final months = (difference.inDays / 30).floor();
-        return 'Il y a ${months} mois';
+        return 'Il y a $months mois';
       } else {
         final years = (difference.inDays / 365).floor();
-        return 'Il y a ${years} an${years > 1 ? 's' : ''}';
+        return 'Il y a $years an${years > 1 ? 's' : ''}';
       }
     } else if (difference.inHours > 0) {
-      return 'Il y a ${difference.inHours} heure${difference.inHours > 1 ? 's' : ''}';
+      return 'Il y a $difference.inHours heure${difference.inHours > 1 ? 's' : ''}';
     } else if (difference.inMinutes > 0) {
-      return 'Il y a ${difference.inMinutes} minute${difference.inMinutes > 1 ? 's' : ''}';
+      return 'Il y a $difference.inMinutes minute${difference.inMinutes > 1 ? 's' : ''}';
     } else {
       return 'À l\'instant';
     }
@@ -177,7 +182,7 @@ class Formatters {
     if (items.isEmpty) return '';
     if (items.length == 1) return items[0];
     if (items.length == 2) return '${items[0]} et ${items[1]}';
-    
+
     return '${items.take(items.length - 1).join(', ')} et ${items.last}';
   }
 }
@@ -193,7 +198,9 @@ extension DateTimeExtensions on DateTime {
   /// Vérifier si c'est hier
   bool get isYesterday {
     final yesterday = DateTime.now().subtract(const Duration(days: 1));
-    return day == yesterday.day && month == yesterday.month && year == yesterday.year;
+    return day == yesterday.day &&
+        month == yesterday.month &&
+        year == yesterday.year;
   }
 
   /// Vérifier si c'est cette semaine
@@ -201,8 +208,8 @@ extension DateTimeExtensions on DateTime {
     final now = DateTime.now();
     final weekStart = now.subtract(Duration(days: now.weekday - 1));
     final weekEnd = weekStart.add(const Duration(days: 6));
-    return isAfter(weekStart.subtract(const Duration(days: 1))) && 
-           isBefore(weekEnd.add(const Duration(days: 1)));
+    return isAfter(weekStart.subtract(const Duration(days: 1))) &&
+        isBefore(weekEnd.add(const Duration(days: 1)));
   }
 
   /// Vérifier si c'est ce mois
