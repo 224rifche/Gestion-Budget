@@ -262,10 +262,29 @@ class _RecentTransactionsListState extends State<RecentTransactionsList> {
                               );
                           Navigator.push(
                             context,
-                            MaterialPageRoute(
-                              builder: (context) => EditTransactionScreen(
-                                transaction: transaction,
-                              ),
+                            PageRouteBuilder(
+                              pageBuilder:
+                                  (context, animation, secondaryAnimation) =>
+                                      EditTransactionScreen(
+                                        transaction: transaction,
+                                      ),
+                              transitionsBuilder:
+                                  (
+                                    context,
+                                    animation,
+                                    secondaryAnimation,
+                                    child,
+                                  ) {
+                                    return SlideTransition(
+                                      position: animation.drive(
+                                        Tween(
+                                          begin: const Offset(1.0, 0.0),
+                                          end: Offset.zero,
+                                        ),
+                                      ),
+                                      child: child,
+                                    );
+                                  },
                             ),
                           ).then((result) {
                             if (result == true && mounted) {

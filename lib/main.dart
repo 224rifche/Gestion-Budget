@@ -5,6 +5,7 @@ import 'screens/home_screen.dart';
 import 'providers/transaction_provider.dart';
 import 'providers/category_provider.dart';
 import 'providers/budget_provider.dart';
+import 'providers/savings_goal_provider.dart';
 import 'utils/theme.dart';
 
 void main() {
@@ -21,6 +22,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => TransactionProvider()),
         ChangeNotifierProvider(create: (_) => CategoryProvider()),
         ChangeNotifierProvider(create: (_) => BudgetProvider()),
+        ChangeNotifierProvider(create: (_) => SavingsGoalProvider()),
       ],
       child: MaterialApp(
         title: 'BudgetBuddy',
