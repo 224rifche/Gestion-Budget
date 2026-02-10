@@ -57,6 +57,15 @@ class DbConstants {
   static const String columnTargetDate = 'target_date';
   static const String columnIsCompleted = 'is_completed';
 
+  // Colonnes comptes
+  static const String columnAccountName = 'name';
+  static const String columnAccountType = 'account_type';
+  static const String columnInitialBalance = 'initial_balance';
+  static const String columnCurrentBalance = 'current_balance';
+  static const String columnCurrency = 'currency';
+  static const String columnAccountIcon = 'icon';
+  static const String columnAccountColor = 'color';
+
   // Types de transactions
   static const String transactionTypeIncome = 'income';
   static const String transactionTypeExpense = 'expense';

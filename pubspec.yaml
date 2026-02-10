@@ -43,10 +43,22 @@ dependencies:
     sdk: flutter
   intl: ^0.20.2
   
+  # Utilitaires
+  uuid: ^4.5.1
+  collection: ^1.19.0
+  package_info_plus: ^8.0.23
+  
   # Graphiques et export
   fl_chart: ^0.66.0
   share_plus: ^9.0.0
   path_provider: ^2.1.1
+  
+  # Notifications
+  flutter_local_notifications: ^17.2.3
+  
+  # Authentification biométrique
+  local_auth: ^2.1.2
+  shared_preferences: ^2.2.2
 
 dev_dependencies:
   flutter_test:

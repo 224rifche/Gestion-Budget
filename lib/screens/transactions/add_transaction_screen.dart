@@ -4,9 +4,11 @@ import '../../providers/transaction_provider.dart';
 import '../../providers/category_provider.dart';
 import '../../models/transaction.dart';
 
-/// Écran d'ajout de transaction - VERSION COMPLÈTE
+/// Écran d'ajout/modification de transaction - VERSION COMPLÈTE
 class AddTransactionScreen extends StatefulWidget {
-  const AddTransactionScreen({super.key});
+  final TransactionModel? transaction;
+
+  const AddTransactionScreen({super.key, this.transaction});
 
   @override
   State<AddTransactionScreen> createState() => _AddTransactionScreenState();
@@ -23,6 +25,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   DateTime _selectedDate = DateTime.now();
   String _selectedPaymentMethod = 'Carte bancaire';
   bool _isLoading = false;
+  bool _isEditing = false;
 
   final List<String> _paymentMethods = [
     'Carte bancaire',
@@ -36,6 +39,26 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _isEditing = widget.transaction != null;
+    if (_isEditing) {
+      _populateFields();
+    }
+  }
+
+  void _populateFields() {
+    final transaction = widget.transaction!;
+    _titleController.text = transaction.title;
+    _amountController.text = transaction.amount.toString();
+    _descriptionController.text = transaction.description ?? '';
+    _selectedDate = transaction.date;
+    _selectedPaymentMethod = transaction.paymentMethod ?? 'Carte bancaire';
+    _selectedCategoryId = transaction.categoryId;
+    _selectedType = transaction.transactionType;
+  }
+
+  @override
   void dispose() {
     _titleController.dispose();
     _amountController.dispose();
@@ -47,7 +70,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Nouvelle transaction'),
+        title: Text(
+          _isEditing ? 'Modifier la transaction' : 'Nouvelle transaction',
+        ),
         backgroundColor: const Color(0xFF1E3A8A),
         foregroundColor: Colors.white,
         actions: [
@@ -365,27 +390,48 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       // Parse amount (gérer virgule et point)
       final amount = double.parse(_amountController.text.replaceAll(',', '.'));
 
-      // ✅ CRÉER une NOUVELLE transaction (pas copyWith!)
-      final transaction = TransactionModel(
-        title: _titleController.text.trim(),
-        amount: amount,
-        date: _selectedDate,
-        categoryId: _selectedCategoryId!,
-        transactionType: _selectedType,
-        paymentMethod: _selectedPaymentMethod,
-        description: _descriptionController.text.trim().isNotEmpty
-            ? _descriptionController.text.trim()
-            : null,
-      );
-
       final provider = context.read<TransactionProvider>();
-      final success = await provider.addTransaction(transaction);
+      bool success;
+
+      if (_isEditing) {
+        // ✅ MODIFIER la transaction existante
+        final updatedTransaction = widget.transaction!.copyWith(
+          title: _titleController.text.trim(),
+          amount: amount,
+          date: _selectedDate,
+          categoryId: _selectedCategoryId!,
+          transactionType: _selectedType,
+          paymentMethod: _selectedPaymentMethod,
+          description: _descriptionController.text.trim().isNotEmpty
+              ? _descriptionController.text.trim()
+              : null,
+        );
+        success = await provider.updateTransaction(updatedTransaction);
+      } else {
+        // ✅ CRÉER une NOUVELLE transaction
+        final transaction = TransactionModel(
+          title: _titleController.text.trim(),
+          amount: amount,
+          date: _selectedDate,
+          categoryId: _selectedCategoryId!,
+          transactionType: _selectedType,
+          paymentMethod: _selectedPaymentMethod,
+          description: _descriptionController.text.trim().isNotEmpty
+              ? _descriptionController.text.trim()
+              : null,
+        );
+        success = await provider.addTransaction(transaction);
+      }
 
       if (mounted) {
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Transaction enregistrée avec succès!'),
+            SnackBar(
+              content: Text(
+                _isEditing
+                    ? 'Transaction modifiée avec succès!'
+                    : 'Transaction enregistrée avec succès!',
+              ),
               backgroundColor: Colors.green,
             ),
           );

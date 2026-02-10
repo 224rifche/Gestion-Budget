@@ -28,7 +28,9 @@ class BudgetProvider with ChangeNotifier {
 
   /// Obtenir les budgets proches du seuil
   List<BudgetModel> get budgetsNearThreshold {
-    return activeBudgets.where((b) => b.isNearThreshold && !b.isExceeded).toList();
+    return activeBudgets
+        .where((b) => b.isNearThreshold && !b.isExceeded)
+        .toList();
   }
 
   /// Initialiser et charger les budgets
@@ -68,10 +70,12 @@ class BudgetProvider with ChangeNotifier {
   Future<bool> addBudget(BudgetModel budget) async {
     try {
       // Vérifier qu'il n'existe pas déjà un budget pour cette catégorie et période
-      final existing = _budgets.where((b) =>
-          b.categoryId == budget.categoryId &&
-          b.periodType == budget.periodType &&
-          b.isActive);
+      final existing = _budgets.where(
+        (b) =>
+            b.categoryId == budget.categoryId &&
+            b.periodType == budget.periodType &&
+            b.isActive,
+      );
 
       if (existing.isNotEmpty) {
         _errorMessage = 'Un budget existe déjà pour cette catégorie et période';
@@ -80,10 +84,7 @@ class BudgetProvider with ChangeNotifier {
       }
 
       final db = await DatabaseHelper.instance.database;
-      final id = await db.insert(
-        DbConstants.tableBudgets,
-        budget.toMap(),
-      );
+      final id = await db.insert(DbConstants.tableBudgets, budget.toMap());
 
       final newBudget = budget.copyWith(id: id);
       _budgets.add(newBudget);
@@ -106,10 +107,10 @@ class BudgetProvider with ChangeNotifier {
   Future<bool> updateBudget(BudgetModel budget) async {
     try {
       final db = await DatabaseHelper.instance.database;
-      
+
       // Mettre à jour la date de modification
       final updatedBudget = budget.copyWith(updatedAt: DateTime.now());
-      
+
       await db.update(
         DbConstants.tableBudgets,
         updatedBudget.toMap(),
@@ -173,29 +174,32 @@ class BudgetProvider with ChangeNotifier {
   Future<void> _updateBudgetSpent([BudgetModel? specificBudget]) async {
     try {
       final db = await DatabaseHelper.instance.database;
-      
+
       for (var budget in _budgets) {
         if (specificBudget != null && budget.id != specificBudget.id) continue;
-        
+
         // Calculer les dates de début et fin selon le type de période
         final period = _getPeriodDates(budget.periodType, budget.startDate);
-        
+
         // Récupérer les transactions de dépenses pour cette catégorie dans la période
-        final result = await db.rawQuery('''
+        final result = await db.rawQuery(
+          '''
           SELECT COALESCE(SUM(${DbConstants.columnAmount}), 0) as total
           FROM ${DbConstants.tableTransactions}
           WHERE ${DbConstants.columnCategoryId} = ?
             AND ${DbConstants.columnTransactionType} = 'expense'
             AND ${DbConstants.columnDate} >= ?
             AND ${DbConstants.columnDate} <= ?
-      ''', [budget.categoryId, period['start'], period['end']]);
+      ''',
+          [budget.categoryId, period['start'], period['end']],
+        );
 
         final spent = (result.first['total'] as num).toDouble();
 
         // Mettre à jour le budget
         if (budget.currentSpent != spent) {
           final updatedBudget = budget.copyWith(currentSpent: spent);
-          
+
           final index = _budgets.indexWhere((b) => b.id == budget.id);
           if (index != -1) {
             _budgets[index] = updatedBudget;
@@ -237,11 +241,15 @@ class BudgetProvider with ChangeNotifier {
     switch (periodType) {
       case 'daily':
         start = DateTime(startDate.year, startDate.month, startDate.day);
-        end = start.add(const Duration(days: 1)).subtract(const Duration(seconds: 1));
+        end = start
+            .add(const Duration(days: 1))
+            .subtract(const Duration(seconds: 1));
         break;
       case 'weekly':
         start = startDate.subtract(Duration(days: startDate.weekday - 1));
-        end = start.add(const Duration(days: 7)).subtract(const Duration(seconds: 1));
+        end = start
+            .add(const Duration(days: 7))
+            .subtract(const Duration(seconds: 1));
         break;
       case 'monthly':
         start = DateTime(startDate.year, startDate.month, 1);
@@ -256,10 +264,7 @@ class BudgetProvider with ChangeNotifier {
         end = DateTime.now();
     }
 
-    return {
-      'start': start.toIso8601String(),
-      'end': end.toIso8601String(),
-    };
+    return {'start': start.toIso8601String(), 'end': end.toIso8601String()};
   }
 
   /// Obtenir un budget par ID
@@ -313,7 +318,7 @@ class BudgetProvider with ChangeNotifier {
   /// Statistiques globales des budgets
   Map<String, dynamic> getBudgetStats() {
     final active = activeBudgets;
-    
+
     if (active.isEmpty) {
       return {
         'totalLimit': 0.0,
@@ -327,8 +332,12 @@ class BudgetProvider with ChangeNotifier {
 
     final totalLimit = active.fold(0.0, (sum, b) => sum + b.amountLimit);
     final totalSpent = active.fold(0.0, (sum, b) => sum + b.currentSpent);
-    final totalRemaining = active.fold(0.0, (sum, b) => sum + b.remainingAmount);
-    final averageUsage = active.fold(0.0, (sum, b) => sum + b.percentageUsed) / active.length;
+    final totalRemaining = active.fold(
+      0.0,
+      (sum, b) => sum + b.remainingAmount,
+    );
+    final averageUsage =
+        active.fold(0.0, (sum, b) => sum + b.percentageUsed) / active.length;
 
     return {
       'totalLimit': totalLimit,

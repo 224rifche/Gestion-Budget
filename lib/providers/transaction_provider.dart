@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../models/transaction.dart';
 import '../database/database_helper.dart';
+import '../services/budget_monitor_service.dart';
 
 class TransactionProvider with ChangeNotifier {
   List<TransactionModel> _transactions = [];
@@ -14,6 +15,9 @@ class TransactionProvider with ChangeNotifier {
   DateTime? _startDate;
   DateTime? _endDate;
 
+  // Services pour les notifications
+  BudgetMonitorService? _budgetMonitorService;
+
   // Getters
   List<TransactionModel> get transactions => _filteredTransactions;
   List<TransactionModel> get allTransactions => _transactions;
@@ -21,6 +25,11 @@ class TransactionProvider with ChangeNotifier {
   String? get errorMessage => _errorMessage;
   String? get selectedType => _selectedType;
   int? get selectedCategoryId => _selectedCategoryId;
+
+  /// Définir le service de surveillance (injecté par HomeScreen)
+  void setBudgetMonitorService(BudgetMonitorService service) {
+    _budgetMonitorService = service;
+  }
 
   /// Initialiser et charger les transactions
   Future<void> initialize() async {
@@ -63,6 +72,16 @@ class TransactionProvider with ChangeNotifier {
       _transactions.insert(0, newTransaction);
       _applyFilters();
 
+      // Vérifier les budgets après ajout de transaction (dépenses uniquement)
+      if (transaction.transactionType == 'expense' &&
+          _budgetMonitorService != null) {
+        // Note: Cette méthode nécessitera les autres providers
+        // Pour l'instant, nous allons juste logger
+        debugPrint(
+          '🔍 Surveillance budgets après transaction: ${transaction.title}',
+        );
+      }
+
       notifyListeners();
       return true;
     } catch (e) {
@@ -103,11 +122,7 @@ class TransactionProvider with ChangeNotifier {
   Future<bool> deleteTransaction(int id) async {
     try {
       final db = await DatabaseHelper.instance.database;
-      await db.delete(
-        'transactions',
-        where: 'id = ?',
-        whereArgs: [id],
-      );
+      await db.delete('transactions', where: 'id = ?', whereArgs: [id]);
 
       // Supprimer de la liste locale
       _transactions.removeWhere((t) => t.id == id);
@@ -158,12 +173,14 @@ class TransactionProvider with ChangeNotifier {
   void _applyFilters() {
     _filteredTransactions = _transactions.where((transaction) {
       // Filtre par type
-      if (_selectedType != null && transaction.transactionType != _selectedType) {
+      if (_selectedType != null &&
+          transaction.transactionType != _selectedType) {
         return false;
       }
 
       // Filtre par catégorie
-      if (_selectedCategoryId != null && transaction.categoryId != _selectedCategoryId) {
+      if (_selectedCategoryId != null &&
+          transaction.categoryId != _selectedCategoryId) {
         return false;
       }
 
@@ -210,8 +227,19 @@ class TransactionProvider with ChangeNotifier {
         getTotalExpense(start: start, end: end);
   }
 
+  /// Obtenir les transactions d'une période (méthode publique)
+  List<TransactionModel> getTransactionsByPeriod(
+    DateTime? start,
+    DateTime? end,
+  ) {
+    return _getTransactionsByPeriod(start, end);
+  }
+
   /// Helper pour obtenir les transactions d'une période
-  List<TransactionModel> _getTransactionsByPeriod(DateTime? start, DateTime? end) {
+  List<TransactionModel> _getTransactionsByPeriod(
+    DateTime? start,
+    DateTime? end,
+  ) {
     return _transactions.where((transaction) {
       if (start != null && transaction.date.isBefore(start)) {
         return false;
@@ -225,8 +253,10 @@ class TransactionProvider with ChangeNotifier {
 
   /// Grouper les transactions par catégorie
   Map<int, double> getExpensesByCategory({DateTime? start, DateTime? end}) {
-    final expenses = _getTransactionsByPeriod(start, end)
-        .where((t) => t.transactionType == 'expense');
+    final expenses = _getTransactionsByPeriod(
+      start,
+      end,
+    ).where((t) => t.transactionType == 'expense');
 
     final Map<int, double> result = {};
     for (var transaction in expenses) {

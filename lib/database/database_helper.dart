@@ -62,7 +62,7 @@ class DatabaseHelper {
       CREATE TABLE ${DbConstants.tableTransactions} (
         ${DbConstants.columnId} INTEGER PRIMARY KEY AUTOINCREMENT,
         ${DbConstants.columnTitle} TEXT NOT NULL,
-        ${DbConstants.columnAmount} REAL NOT NULL CHECK(${DbConstants.columnAmount} >= 0),
+        ${DbConstants.columnAmount} REAL NOT NULL,
         ${DbConstants.columnDate} TEXT NOT NULL,
         ${DbConstants.columnCategoryId} INTEGER NOT NULL,
         ${DbConstants.columnTransactionType} TEXT NOT NULL CHECK(${DbConstants.columnTransactionType} IN ('income', 'expense')),
@@ -117,6 +117,22 @@ class DatabaseHelper {
       )
     ''');
 
+    // Table Accounts
+    await db.execute('''
+      CREATE TABLE ${DbConstants.tableAccounts} (
+        ${DbConstants.columnId} INTEGER PRIMARY KEY AUTOINCREMENT,
+        ${DbConstants.columnAccountName} TEXT NOT NULL,
+        ${DbConstants.columnAccountType} TEXT NOT NULL CHECK(${DbConstants.columnAccountType} IN ('cash', 'bank', 'credit_card', 'savings', 'investment')),
+        ${DbConstants.columnInitialBalance} REAL NOT NULL DEFAULT 0,
+        ${DbConstants.columnCurrentBalance} REAL NOT NULL DEFAULT 0,
+        ${DbConstants.columnCurrency} TEXT NOT NULL DEFAULT 'EUR',
+        ${DbConstants.columnAccountIcon} TEXT,
+        ${DbConstants.columnAccountColor} TEXT,
+        ${DbConstants.columnIsActive} INTEGER DEFAULT 1,
+        ${DbConstants.columnCreatedAt} TEXT NOT NULL,
+        ${DbConstants.columnUpdatedAt} TEXT NOT NULL
+      )
+    ''');
     // Table Savings Goals
     await db.execute('''
       CREATE TABLE ${DbConstants.tableSavingsGoals} (

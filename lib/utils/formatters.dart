@@ -5,14 +5,20 @@ class Formatters {
   // Formatters monétaires
   static final NumberFormat currencyFormatter = NumberFormat.currency(
     locale: 'fr_FR',
-    symbol: '€',
+    symbol: 'GNF',
+    decimalDigits: 0, // GNF n'a généralement pas de décimales
+  );
+
+  static final NumberFormat currencyFormatterWithDecimals = NumberFormat.currency(
+    locale: 'fr_FR',
+    symbol: 'GNF',
     decimalDigits: 2,
   );
 
   static final NumberFormat compactCurrencyFormatter =
       NumberFormat.compactCurrency(
         locale: 'fr_FR',
-        symbol: '€',
+        symbol: 'GNF',
         decimalDigits: 1,
       );
 
@@ -28,70 +34,33 @@ class Formatters {
   static final NumberFormat numberFormatter = NumberFormat.decimalPattern(
     'fr_FR',
   );
+
   static final NumberFormat percentFormatter = NumberFormat.percentPattern(
     'fr_FR',
   );
 
-  /// Formater un montant en euros
+  /// Formater un montant en GNF
   static String formatCurrency(double amount) {
-    return currencyFormatter.format(amount);
+    // Pour GNF, on n'affiche généralement pas les décimales
+    return '${amount.toInt().toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]} ',
+    )} GNF';
   }
 
-  /// Formater un montant compact (ex: 1.2k€ pour 1200€)
+  // Formatter pour les montants avec décimales si nécessaire
+  static String formatCurrencyWithDecimals(double amount) {
+    return currencyFormatterWithDecimals.format(amount);
+  }
+
+  // Formatter compact pour les grands montants
   static String formatCompactCurrency(double amount) {
-    return compactCurrencyFormatter.format(amount);
-  }
-
-  /// Formater un montant sans symbole
-  static String formatAmount(double amount) {
-    return numberFormatter.format(amount);
-  }
-
-  /// Formater un pourcentage
-  static String formatPercentage(double value) {
-    return percentFormatter.format(value / 100);
-  }
-
-  /// Formater une date complète
-  static String formatDate(DateTime date) {
-    return dateFormatter.format(date);
-  }
-
-  /// Formater une date courte (jour/mois)
-  static String formatShortDate(DateTime date) {
-    return shortDateFormatter.format(date);
-  }
-
-  /// Formater mois et année
-  static String formatMonthYear(DateTime date) {
-    return monthYearFormatter.format(date);
-  }
-
-  /// Formater jour et mois
-  static String formatDayMonth(DateTime date) {
-    return dayMonthFormatter.format(date);
-  }
-
-  /// Formater l'heure
-  static String formatTime(DateTime date) {
-    return timeFormatter.format(date);
-  }
-
-  /// Formater date et heure
-  static String formatDateTime(DateTime date) {
-    return dateTimeFormatter.format(date);
-  }
-
-  /// Formater une durée (ex: "2 jours", "1 semaine")
-  static String formatDuration(Duration duration) {
-    if (duration.inDays > 0) {
-      return '${duration.inDays} jour${duration.inDays > 1 ? 's' : ''}';
-    } else if (duration.inHours > 0) {
-      return '${duration.inHours} heure${duration.inHours > 1 ? 's' : ''}';
-    } else if (duration.inMinutes > 0) {
-      return '${duration.inMinutes} minute${duration.inMinutes > 1 ? 's' : ''}';
+    if (amount >= 1000000) {
+      return '${(amount / 1000000).toStringAsFixed(1)}M GNF';
+    } else if (amount >= 1000) {
+      return '${(amount / 1000).toStringAsFixed(1)}K GNF';
     } else {
-      return 'Quelques secondes';
+      return formatCurrency(amount);
     }
   }
 
@@ -106,51 +75,44 @@ class Formatters {
       } else if (difference.inDays < 7) {
         return 'Il y a ${difference.inDays} jours';
       } else if (difference.inDays < 30) {
-        final weeks = (difference.inDays / 7).floor();
-        return 'Il y a $weeks semaine${weeks > 1 ? 's' : ''}';
+        return 'Il y a ${(difference.inDays / 7).floor()} semaine${(difference.inDays / 7).floor() > 1 ? 's' : ''}';
       } else if (difference.inDays < 365) {
-        final months = (difference.inDays / 30).floor();
-        return 'Il y a $months mois';
+        return 'Il y a ${(difference.inDays / 30).floor()} mois';
       } else {
-        final years = (difference.inDays / 365).floor();
-        return 'Il y a $years an${years > 1 ? 's' : ''}';
+        return 'Il y a ${(difference.inDays / 365).floor()} an${(difference.inDays / 365).floor() > 1 ? 's' : ''}';
       }
     } else if (difference.inHours > 0) {
-      return 'Il y a $difference.inHours heure${difference.inHours > 1 ? 's' : ''}';
+      return 'Il y a ${difference.inHours} heure${difference.inHours > 1 ? 's' : ''}';
     } else if (difference.inMinutes > 0) {
-      return 'Il y a $difference.inMinutes minute${difference.inMinutes > 1 ? 's' : ''}';
+      return 'Il y a ${difference.inMinutes} minute${difference.inMinutes > 1 ? 's' : ''}';
     } else {
       return 'À l\'instant';
     }
   }
 
-  /// Formater un nombre avec séparateurs de milliers
-  static String formatNumber(int number) {
-    return NumberFormat.decimalPattern('fr_FR').format(number);
+  // Formatter de pourcentage
+  static String formatPercentage(double value) {
+    return '${value.toStringAsFixed(1)}%';
   }
 
-  /// Formater un texte pour l'affichage (tronquer si trop long)
-  static String formatText(String text, {int maxLength = 20}) {
-    if (text.length <= maxLength) {
-      return text;
-    }
-    return '${text.substring(0, maxLength - 3)}...';
+  // Formatter de nombre
+  static String formatNumber(double number) {
+    return numberFormatter.format(number);
   }
 
-  /// Formater un type de transaction en français
-  static String formatTransactionType(String type) {
-    switch (type.toLowerCase()) {
-      case 'income':
-        return 'Revenu';
-      case 'expense':
-        return 'Dépense';
-      default:
-        return type;
+  // Formatter de nombre compact
+  static String formatCompactNumber(double number) {
+    if (number >= 1000000) {
+      return '${(number / 1000000).toStringAsFixed(1)}M';
+    } else if (number >= 1000) {
+      return '${(number / 1000).toStringAsFixed(1)}K';
+    } else {
+      return formatNumber(number);
     }
   }
 
-  /// Formater une période de budget en français
-  static String formatPeriodType(String period) {
+  // Formatter de période
+  static String formatPeriod(String period) {
     switch (period.toLowerCase()) {
       case 'daily':
         return 'Quotidien';
@@ -165,79 +127,48 @@ class Formatters {
     }
   }
 
-  /// Formater un montant avec couleur (positif/négatif)
-  static String formatAmountWithSign(double amount) {
-    final formatted = formatCurrency(amount.abs());
-    return amount >= 0 ? '+$formatted' : '-$formatted';
+  // Formatter de type de transaction
+  static String formatTransactionType(String type) {
+    switch (type.toLowerCase()) {
+      case 'income':
+        return 'Revenu';
+      case 'expense':
+        return 'Dépense';
+      default:
+        return type;
+    }
   }
 
-  /// Capitaliser la première lettre
-  static String capitalize(String text) {
-    if (text.isEmpty) return text;
-    return '${text[0].toUpperCase()}${text.substring(1).toLowerCase()}';
+  // Formatter de méthode de paiement
+  static String formatPaymentMethod(String method) {
+    switch (method.toLowerCase()) {
+      case 'cash':
+        return 'Espèces';
+      case 'card':
+        return 'Carte bancaire';
+      case 'transfer':
+        return 'Virement';
+      case 'mobile':
+        return 'Mobile Money';
+      default:
+        return method;
+    }
   }
 
-  /// Formater une liste en texte (ex: "A, B et C")
-  static String formatList(List<String> items) {
-    if (items.isEmpty) return '';
-    if (items.length == 1) return items[0];
-    if (items.length == 2) return '${items[0]} et ${items[1]}';
-
-    return '${items.take(items.length - 1).join(', ')} et ${items.last}';
-  }
-}
-
-/// Extension pour DateTime
-extension DateTimeExtensions on DateTime {
-  /// Vérifier si c'est aujourd'hui
-  bool get isToday {
-    final now = DateTime.now();
-    return day == now.day && month == now.month && year == now.year;
+  // Formatter de date
+  static String formatDate(DateTime date) {
+    return dateFormatter.format(date);
   }
 
-  /// Vérifier si c'est hier
-  bool get isYesterday {
-    final yesterday = DateTime.now().subtract(const Duration(days: 1));
-    return day == yesterday.day &&
-        month == yesterday.month &&
-        year == yesterday.year;
+  static String formatDateWithTime(DateTime date) {
+    return dateTimeFormatter.format(date);
   }
 
-  /// Vérifier si c'est cette semaine
-  bool get isThisWeek {
-    final now = DateTime.now();
-    final weekStart = now.subtract(Duration(days: now.weekday - 1));
-    final weekEnd = weekStart.add(const Duration(days: 6));
-    return isAfter(weekStart.subtract(const Duration(days: 1))) &&
-        isBefore(weekEnd.add(const Duration(days: 1)));
+  static String formatShortDate(DateTime date) {
+    return shortDateFormatter.format(date);
   }
 
-  /// Vérifier si c'est ce mois
-  bool get isThisMonth {
-    final now = DateTime.now();
-    return month == now.month && year == now.year;
-  }
-
-  /// Vérifier si c'est cette année
-  bool get isThisYear {
-    return year == DateTime.now().year;
-  }
-}
-
-/// Extension pour double
-extension DoubleExtensions on double {
-  /// Arrondir à 2 décimales
-  double roundToTwoDecimals() {
-    return (this * 100).roundToDouble() / 100;
-  }
-
-  /// Formater comme monnaie
-  String toCurrency() {
-    return Formatters.formatCurrency(this);
-  }
-
-  /// Formater comme pourcentage
-  String toPercentage() {
-    return Formatters.formatPercentage(this);
+  static String formatMonthYear(DateTime date) {
+    return monthYearFormatter.format(date);
   }
 }

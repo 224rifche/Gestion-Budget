@@ -6,9 +6,13 @@ import 'providers/transaction_provider.dart';
 import 'providers/category_provider.dart';
 import 'providers/budget_provider.dart';
 import 'providers/savings_goal_provider.dart';
+import 'services/notification_service.dart';
 import 'utils/theme.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService.instance.initialize();
+  await NotificationService.instance.requestPermissions();
   runApp(const MyApp());
 }
 

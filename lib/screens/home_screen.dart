@@ -6,12 +6,14 @@ import '../providers/budget_provider.dart';
 import '../providers/savings_goal_provider.dart';
 import '../utils/formatters.dart';
 import '../utils/theme.dart';
+import 'settings/settings_screen.dart';
 
 // ✅ IMPORTS MANQUANTS - CRITIQUES !
 import '../widgets/balance_card.dart';
 import '../widgets/recent_transactions_list.dart';
 import '../widgets/budget_progress_card.dart';
 import '../widgets/quick_stats_card.dart';
+import '../widgets/notification_test_widget.dart';
 import '../screens/transactions/add_transaction_screen.dart';
 import '../screens/statistics/statistics_screen.dart';
 import '../screens/budgets/budgets_screen.dart';
@@ -66,10 +68,12 @@ class _HomeScreenState extends State<HomeScreen> {
           _buildTransactionsView(),
           _buildStatisticsView(),
           _buildBudgetsView(),
+          _buildSettingsView(),
         ],
       ),
       // ✅ CORRECTION #1 : Navigation vers AddTransactionScreen
       floatingActionButton: FloatingActionButton(
+        heroTag: 'home_fab',
         onPressed: () async {
           // ✅ FIX: Capturer le contexte AVANT l'opération asynchrone
           final navigator = Navigator.of(context);
@@ -126,6 +130,10 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.account_balance_wallet),
             label: 'Budgets',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Paramètres',
           ),
         ],
       ),
@@ -210,6 +218,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 // ✅ Utiliser BudgetProgressCard existant
                 const BudgetProgressCard(maxBudgets: 3),
+                const SizedBox(height: 24),
+
+                // Widget de test pour les notifications (à enlever en production)
+                const NotificationTestWidget(),
               ],
             ),
           ),
@@ -463,5 +475,9 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildSettingsView() {
+    return const SettingsScreen();
   }
 }
